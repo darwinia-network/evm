@@ -855,10 +855,17 @@ impl<'config, 'precompiles, S: StackState<'config>, P: PrecompileSet>
 			}
 		}
 
-		if let Some(result) =
-			self.precompile_set
-				.execute(code_address, &input, Some(gas_limit), &context, is_static)
-		{
+		// At this point, the state has been modified in enter_substate to
+		// reflect both the is_static parameter of this call and the is_static
+		// of the caller context.
+		let precompile_is_static = self.state.metadata().is_static();
+		if let Some(result) = self.precompile_set.execute(
+			code_address,
+			&input,
+			Some(gas_limit),
+			&context,
+			precompile_is_static,
+		) {
 			return match result {
 				Ok(PrecompileOutput {
 					exit_status,
